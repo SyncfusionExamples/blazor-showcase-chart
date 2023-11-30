@@ -2,6 +2,10 @@
 
 The Blazor Showcase Chart includes number of line charts with range selector. Chart minimum and maximum range is changed based on range selector selected range. The radio button is used to change the chart title.
 
+## Output
+
+![](/showcase-chart.png)
+
 ## Deployment
 
 ### Requirements to run the demo

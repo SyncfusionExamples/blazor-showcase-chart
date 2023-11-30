@@ -1,0 +1,180 @@
+﻿@page "/"
+ 
+@using Syncfusion.Blazor.Charts
+@using Syncfusion.Blazor.Buttons
+ 
+<div class="row">
+    <div class="col-md-6">
+        <SfRangeNavigator ValueType="RangeValueType.DateTime" DataSource="@rangeSelectorData" XName="Period"
+                                      YName="Price" IntervalType="@RangeIntervalType.Years">
+        <RangeNavigatorEvents Changed="OnRangeChanged"></RangeNavigatorEvents>
+        <RangeNavigatorRangeTooltipSettings Enable="true"></RangeNavigatorRangeTooltipSettings>
+        </SfRangeNavigator>
+    </div>
+
+    <div class="col-md-3">
+      <div>Environment</div>
+        <div>
+            @foreach (CheckboxDetails environment in EnvironmentCollection)
+            {
+              <SfRadioButton Name="Environment" TChecked="string" @bind-Checked="@selectedEnvironment" Label="@environment.Label" Value="@environment.Label" @onchange="EnvironMentValueChanged"></SfRadioButton>
+              <br />
+            }
+        </div>
+    </div>
+    <div class="col-md-3">
+         <div>Scenarios</div>
+           <div>
+                @foreach (CheckboxDetails checkboxDetails in CheckboxDetailCollection)
+                {
+                    <SfRadioButton Name="Scenarios" TChecked="string" @bind-Checked="@selectedScenario" Label="@checkboxDetails.Label" Value="@checkboxDetails.Label" @onchange="ScenarioValueChanged"></SfRadioButton>
+                    <br />
+                }
+           </div>
+    </div>
+</div>
+ 
+<div class="row">
+    @foreach (ChartDetails chartDetails in ChartDetailCollection)
+    {
+      <div class="col-md-5">
+        <SfChart Title="@chartDetails.Title">
+           <ChartTitleStyle TextAlignment="Alignment.Near" Color="lightgrey" Opacity="0.5"></ChartTitleStyle>
+            <ChartArea>
+                <ChartAreaBorder Width="0"></ChartAreaBorder>
+            </ChartArea>
+           <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"
+                                            LabelFormat="MMM yyyy" Minimum="@minimum" Maximum="@maximum">
+                <ChartAxisMajorGridLines Width="0"></ChartAxisMajorGridLines>
+           </ChartPrimaryXAxis>
+           <ChartPrimaryYAxis LabelFormat="{value} M" RangePadding="ChartRangePadding.None">
+               <ChartAxisLineStyle Width="0"></ChartAxisLineStyle>
+               <ChartAxisMajorTickLines Width="0"></ChartAxisMajorTickLines>
+              <ChartAxisMinorTickLines Width="0"></ChartAxisMinorTickLines>
+           </ChartPrimaryYAxis>
+           <ChartSeriesCollection>
+              <ChartSeries LegendShape="LegendShape.Circle" Type="ChartSeriesType.Line" Fill="@chartDetails.Fill"
+                                            DataSource="@chartDetails.ChartPoints" XName="Period" YName="Price"
+                                            Width="2" Name=@(selectedScenario + selectedEnvironmentCode)>
+              </ChartSeries>
+           </ChartSeriesCollection>
+          <ChartCrosshairSettings Enable="true" LineType="LineType.Vertical">
+           </ChartCrosshairSettings>
+          <ChartZoomSettings EnableSelectionZooming=true Mode="ZoomMode.XY"></ChartZoomSettings>
+          <ChartTooltipSettings Enable="true" Shared="true"></ChartTooltipSettings>
+          <ChartLegendSettings Position="LegendPosition.Top" Alignment="Alignment.Near">
+          </ChartLegendSettings>
+        </SfChart>
+      </div>
+}
+ 
+</div>
+@code {
+ 
+    public class ChartDetails
+    {
+        public string Title { get; set; }
+        public string Fill { get; set; }
+        public List<LineChartData> ChartPoints { get; set; }
+    }
+    public class CheckboxDetails
+    {
+        public string Label { get; set; }
+        public bool IsChecked { get; set; }
+    }
+ 
+    public class LineChartData
+    {
+        public DateTime Period { get; set; }
+        public double Price { get; set; }
+    }
+ 
+    List<string> chartCategories = new List<string> { "Request Per Second", "Latency Average(ms)", "Startup Time(ms)", "Time to First Response(ms)", "Max Working Set(MB)", "Max CPU(%)", "Working Set - P90(MB)", "CPU - P90(%)", "Application Size(MB, No Symbols)", "Bad Responses + Socket Errors", "Build Time(ms)" };
+    List<string> chartScenarios = new List<string> { "JsonGin", "Stage1Aot", "Stage1AotServerGC", "Stage1SpeedOpt" };
+    List<string> chartEnvironments = new List<string> { "Ampere Linux", "Intel Linux", "Intel Windows" };
+    List<string> colors = new List<string> { "#ff4d4d", "#ac00e6", "#ff9933", "#0066ff" };
+ 
+    string selectedScenario = "Stage1Aot";
+    string selectedEnvironment = "Intel Linux";
+    string selectedEnvironmentCode = "-intel-lin";
+ 
+    object minimum, maximum;
+ 
+    List<LineChartData> rangeSelectorData = GetChartPoints();
+    public List<ChartDetails> ChartDetailCollection { get; set; }
+    public List<CheckboxDetails> CheckboxDetailCollection { get; set; }
+    public List<CheckboxDetails> EnvironmentCollection { get; set; }
+ 
+    public void OnRangeChanged(ChangedEventArgs args)
+    {
+        minimum = args.Start;
+        maximum = args.End;
+        StateHasChanged();
+    }
+    protected override void OnInitialized()
+    {
+        GetChartDetails();
+        GetEnvironmentDetails();
+        GetChartScenarioDetails();
+    }
+    void GetChartScenarioDetails()
+    {
+        CheckboxDetailCollection = new List<CheckboxDetails>();
+        foreach (string chartScenario in chartScenarios)
+        {
+            CheckboxDetailCollection.Add(new CheckboxDetails { Label = chartScenario, IsChecked = selectedScenario == chartScenario });
+        }
+    }
+ 
+    void GetEnvironmentDetails()
+    {
+        EnvironmentCollection = new List<CheckboxDetails>();
+        foreach (string chartEnvironment in chartEnvironments)
+        {
+            EnvironmentCollection.Add(new CheckboxDetails { Label = chartEnvironment, IsChecked = selectedEnvironment == chartEnvironment });
+        }
+    }
+    void ScenarioValueChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        selectedScenario = args.Value.ToString();
+        GetChartDetails();
+    }
+    void EnvironMentValueChanged(Microsoft.AspNetCore.Components.ChangeEventArgs args)
+    {
+        selectedEnvironment = args.Value.ToString();
+        selectedEnvironmentCode = selectedEnvironment == "Ampere Linux" ? "-amp-lin" : selectedEnvironment == "Intel Linux" ? "-intel-lin" : "-intel-win";
+        GetChartDetails();
+    }
+    void GetChartDetails()
+    {
+        ChartDetailCollection = new List<ChartDetails>();
+        foreach(string chartCategory in chartCategories)
+        {
+            ChartDetailCollection.Add(new ChartDetails { Title = chartCategory, ChartPoints = GetChartPoints(), Fill = colors[chartScenarios.IndexOf(selectedScenario)] });
+        }
+    }
+ 
+    static List<LineChartData> GetChartPoints()
+    {
+        List<LineChartData> chartData = new List<LineChartData>();
+        double stockPriceX = 80;
+        Random randomNum = new Random();
+        for (int i = 1; i < 100; i++)
+        {
+            if (randomNum.NextDouble() > 0.5)
+            {
+                stockPriceX += randomNum.NextDouble();
+            }
+            else
+            {
+                stockPriceX -= randomNum.NextDouble();
+            }
+            chartData.Add(new LineChartData
+                {
+                    Period = new DateTime(2023, 8, 2).AddDays(i),
+                    Price = Math.Round(stockPriceX)
+                });
+        }
+        return chartData;
+    }
+}

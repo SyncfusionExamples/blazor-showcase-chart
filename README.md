@@ -13,7 +13,7 @@ The Blazor Showcase Chart includes number of line charts with range selector. Ch
 The samples require the following requirements to run.
 
 * [Visual Studio 2022](https://visualstudio.microsoft.com/vs/)
-* [.NET 7.0](https://dotnet.microsoft.com/en-us/download/dotnet/7.0)
+* [.NET 10.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
 
 ### Run
 
